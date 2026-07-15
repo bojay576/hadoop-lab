@@ -46,7 +46,6 @@ case "$HADOOP_ROLE" in
             echo "Attempt $i/60: ResourceManager not yet ready, retrying in 5s..."
             sleep 5
         done
-        fix_nm_hostname
         exec yarn nodemanager
         ;;
     *)
