@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: datanode
-          image: hadoop-lab:latest
+          image: ghcr.io/bojay576/hadoop-lab:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: HADOOP_ROLE

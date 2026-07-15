@@ -1,7 +1,8 @@
 #!/bin/bash
 # =============================================================
-# Hadoop Lab - 一键清理脚本
-# 用法: ./cleanup.sh
+# Hadoop Lab - Clean up from any Kubernetes cluster
+# Usage: ./cleanup.sh
+# Prerequisites: kubectl with access to the target cluster
 # =============================================================
 set -e
 
@@ -16,36 +17,28 @@ NC='\033[0m'
 info()  { echo -e "${GREEN}[INFO]${NC} $1"; }
 warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
 
-read -p "确定要删除 Hadoop Lab 所有资源吗? (y/N): " confirm
+read -p "Delete all Hadoop Lab resources in namespace 'hadoop-lab'? (y/N): " confirm
 if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-    echo "已取消."
+    echo "Cancelled."
     exit 0
 fi
 
-info "删除 YARN NodeManager..."
+info "Deleting YARN NodeManager..."
 kubectl delete -f "$K8S_DIR/yarn-nodemanager.yaml" --ignore-not-found
 
-info "删除 YARN ResourceManager..."
+info "Deleting YARN ResourceManager..."
 kubectl delete -f "$K8S_DIR/yarn-resourcemanager.yaml" --ignore-not-found
 
-info "删除 HDFS DataNode..."
+info "Deleting HDFS DataNode..."
 kubectl delete -f "$K8S_DIR/hdfs-datanode.yaml" --ignore-not-found
 
-info "删除 HDFS NameNode..."
+info "Deleting HDFS NameNode..."
 kubectl delete -f "$K8S_DIR/hdfs-namenode.yaml" --ignore-not-found
 
-info "删除 ConfigMap..."
+info "Deleting ConfigMap..."
 kubectl delete -f "$K8S_DIR/configmap.yaml" --ignore-not-found
 
-info "删除命名空间..."
+info "Deleting namespace..."
 kubectl delete -f "$K8S_DIR/namespace.yaml" --ignore-not-found
 
-info "清理节点上的数据目录..."
-sshpass -p 'root' ssh -o StrictHostKeyChecking=no root@123.57.146.116 "
-    for node in k3s-master k3s-worker-1 k3s-worker-2; do
-        echo \"Cleaning \$node...\"
-        ssh -o StrictHostKeyChecking=no \$node 'rm -rf /data/hadoop-lab' 2>/dev/null || true
-    done
-" 2>/dev/null || warn "无法清理节点数据，请手动清理."
-
-info "=== 清理完成 ==="
+info "=== Cleanup complete ==="

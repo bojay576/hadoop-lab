@@ -53,11 +53,9 @@ spec:
       labels:
         app: hdfs-namenode
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: k3s-worker-1
       containers:
         - name: namenode
-          image: hadoop-lab:latest
+          image: ghcr.io/bojay576/hadoop-lab:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: HADOOP_ROLE

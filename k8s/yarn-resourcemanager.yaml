@@ -62,11 +62,9 @@ spec:
       labels:
         app: yarn-resourcemanager
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: k3s-worker-2
       containers:
         - name: resourcemanager
-          image: hadoop-lab:latest
+          image: ghcr.io/bojay576/hadoop-lab:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: HADOOP_ROLE
