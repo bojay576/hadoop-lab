@@ -1,5 +1,8 @@
 FROM apache/hadoop:3.3.6
 
+LABEL org.opencontainers.image.source="https://github.com/bojay576/hadoop-lab"
+LABEL org.opencontainers.image.description="Hadoop Lab - HDFS & YARN/MapReduce on K3s"
+
 USER root
 
 RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*.repo && \
