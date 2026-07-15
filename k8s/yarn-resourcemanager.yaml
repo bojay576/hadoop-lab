@@ -1,0 +1,116 @@
+# YARN ResourceManager - Deployment + Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: yarn-resourcemanager
+  namespace: hadoop-lab
+  labels:
+    app: yarn-resourcemanager
+spec:
+  selector:
+    app: yarn-resourcemanager
+  ports:
+    - name: web
+      port: 8088
+      targetPort: 8088
+    - name: scheduler
+      port: 8030
+      targetPort: 8030
+    - name: res-tracker
+      port: 8031
+      targetPort: 8031
+    - name: app-client
+      port: 8032
+      targetPort: 8032
+    - name: jobhistory
+      port: 19888
+      targetPort: 19888
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: yarn-resourcemanager-external
+  namespace: hadoop-lab
+  labels:
+    app: yarn-resourcemanager
+spec:
+  type: NodePort
+  selector:
+    app: yarn-resourcemanager
+  ports:
+    - name: web
+      port: 8088
+      targetPort: 8088
+      nodePort: 30888
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yarn-resourcemanager
+  namespace: hadoop-lab
+  labels:
+    app: yarn-resourcemanager
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: yarn-resourcemanager
+  template:
+    metadata:
+      labels:
+        app: yarn-resourcemanager
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k3s-worker-2
+      containers:
+        - name: resourcemanager
+          image: hadoop-lab:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: HADOOP_ROLE
+              value: resourcemanager
+          ports:
+            - containerPort: 8088
+              name: web
+            - containerPort: 8030
+              name: scheduler
+            - containerPort: 8031
+              name: res-tracker
+            - containerPort: 8032
+              name: app-client
+            - containerPort: 19888
+              name: jobhistory
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              /entrypoint.sh &
+              # Also start JobHistoryServer
+              sleep 10
+              mapred historyserver &
+              wait
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "200m"
+            limits:
+              memory: "768Mi"
+              cpu: "500m"
+          volumeMounts:
+            - name: hadoop-config
+              mountPath: /opt/hadoop/etc/hadoop/core-site.xml
+              subPath: core-site.xml
+            - name: hadoop-config
+              mountPath: /opt/hadoop/etc/hadoop/hdfs-site.xml
+              subPath: hdfs-site.xml
+            - name: hadoop-config
+              mountPath: /opt/hadoop/etc/hadoop/yarn-site.xml
+              subPath: yarn-site.xml
+            - name: hadoop-config
+              mountPath: /opt/hadoop/etc/hadoop/mapred-site.xml
+              subPath: mapred-site.xml
+      volumes:
+        - name: hadoop-config
+          configMap:
+            name: hadoop-config

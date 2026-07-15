@@ -1,0 +1,57 @@
+# HDFS DataNode - DaemonSet (runs on all nodes)
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: hdfs-datanode
+  namespace: hadoop-lab
+  labels:
+    app: hdfs-datanode
+spec:
+  selector:
+    matchLabels:
+      app: hdfs-datanode
+  template:
+    metadata:
+      labels:
+        app: hdfs-datanode
+    spec:
+      containers:
+        - name: datanode
+          image: hadoop-lab:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: HADOOP_ROLE
+              value: datanode
+          ports:
+            - containerPort: 9864
+              name: data
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "384Mi"
+              cpu: "300m"
+          volumeMounts:
+            - name: hadoop-config
+              mountPath: /opt/hadoop/etc/hadoop/core-site.xml
+              subPath: core-site.xml
+            - name: hadoop-config
+              mountPath: /opt/hadoop/etc/hadoop/hdfs-site.xml
+              subPath: hdfs-site.xml
+            - name: hadoop-config
+              mountPath: /opt/hadoop/etc/hadoop/yarn-site.xml
+              subPath: yarn-site.xml
+            - name: hadoop-config
+              mountPath: /opt/hadoop/etc/hadoop/mapred-site.xml
+              subPath: mapred-site.xml
+            - name: datanode-data
+              mountPath: /data/hdfs/datanode
+      volumes:
+        - name: hadoop-config
+          configMap:
+            name: hadoop-config
+        - name: datanode-data
+          hostPath:
+            path: /data/hadoop-lab/datanode
+            type: DirectoryOrCreate

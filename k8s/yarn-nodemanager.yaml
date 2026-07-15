@@ -1,0 +1,76 @@
+# YARN NodeManager - DaemonSet (runs on worker nodes only)
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: yarn-nodemanager
+  namespace: hadoop-lab
+  labels:
+    app: yarn-nodemanager
+spec:
+  selector:
+    matchLabels:
+      app: yarn-nodemanager
+  template:
+    metadata:
+      labels:
+        app: yarn-nodemanager
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      containers:
+        - name: nodemanager
+          image: hadoop-lab:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: HADOOP_ROLE
+              value: nodemanager
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          ports:
+            - containerPort: 8042
+              name: web
+          resources:
+            requests:
+              memory: "384Mi"
+              cpu: "100m"
+            limits:
+              memory: "640Mi"
+              cpu: "500m"
+          volumeMounts:
+            - name: hadoop-config
+              mountPath: /opt/hadoop/etc/hadoop/core-site.xml
+              subPath: core-site.xml
+            - name: hadoop-config
+              mountPath: /opt/hadoop/etc/hadoop/hdfs-site.xml
+              subPath: hdfs-site.xml
+            - name: hadoop-config
+              mountPath: /opt/hadoop/etc/hadoop/yarn-site.xml
+              subPath: yarn-site.xml
+            - name: hadoop-config
+              mountPath: /opt/hadoop/etc/hadoop/mapred-site.xml
+              subPath: mapred-site.xml
+            - name: yarn-local
+              mountPath: /data/yarn/local
+            - name: yarn-logs
+              mountPath: /data/yarn/logs
+      volumes:
+        - name: hadoop-config
+          configMap:
+            name: hadoop-config
+        - name: yarn-local
+          hostPath:
+            path: /data/hadoop-lab/yarn-local
+            type: DirectoryOrCreate
+        - name: yarn-logs
+          hostPath:
+            path: /data/hadoop-lab/yarn-logs
+            type: DirectoryOrCreate
